@@ -1,5 +1,12 @@
-plugins {
-    id 'com.android.application' version '8.1.0' apply false
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Android Gradle Plugin 8.1.0 — совместим с Gradle 8.7
+        classpath 'com.android.tools.build:gradle:8.1.0'
+    }
 }
 
 allprojects {

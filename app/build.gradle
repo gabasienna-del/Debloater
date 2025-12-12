@@ -1,6 +1,4 @@
-plugins {
-    id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
 android {
     namespace "com.gaba.debloater"
@@ -31,6 +29,6 @@ android {
 }
 
 dependencies {
-    // api-82.jar вручную положи в app/libs/
+    // если ты вручную положил api-82.jar в app/libs — fine
     compileOnly files('libs/api-82.jar')
 }
