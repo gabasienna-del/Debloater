@@ -1,17 +1,17 @@
 package com.gaba.eskukap;
 
-import static de.robv.android.xposed.XposedBridge.log;
-import android.app.AndroidAppHelper;
+import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.XposedBridge;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.List;
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_LoadPackage;
-import de.robv.android.xposed.XposedBridge;
 
 public class HookEntry implements IXposedHookLoadPackage {
 
+    // *** MAXIMAL DEBLOAT LIST (expanded) ***
     private static final List<String> BLOAT = Arrays.asList(
         "com.android.dreams.basic",
         "com.android.dreams.phototable",
@@ -58,6 +58,10 @@ public class HookEntry implements IXposedHookLoadPackage {
         "com.chartcross.gpstest",
         "com.eclipsim.gpsstatus2",
         "com.arlosoft.macrodroid",
+        "com.jana.tube.video",
+        "com.einnovation.temu",
+        "com.picsart.studio",
+        "com.arlosoft.macrodroid",
         "com.jana.tube.video"
     );
 
@@ -73,7 +77,8 @@ public class HookEntry implements IXposedHookLoadPackage {
     }
 
     @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
+    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+
         if (lpparam.packageName.equals("android")) {
             XposedBridge.log("Debloater: loaded android – writing package list");
             writeList();
@@ -81,6 +86,7 @@ public class HookEntry implements IXposedHookLoadPackage {
 
         if (BLOAT.contains(lpparam.packageName)) {
             XposedBridge.log("Debloater BLOCK: " + lpparam.packageName);
+            // здесь можно добавить реальную блокировку/kill, если нужно
         }
     }
 }
