@@ -1,0 +1,14 @@
+<manifest package="com.laibandis.gaba.debloater"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="30" />
+
+    <application
+        android:label="LSPosed S10 Debloater"
+        android:allowBackup="false">
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="Debloat for S10 OneUI 3.1" />
+        <meta-data android:name="xposedminversion" android:value="93" />
+    </application>
+
+</manifest>
