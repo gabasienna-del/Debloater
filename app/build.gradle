@@ -3,6 +3,7 @@ plugins {
 }
 
 android {
+    namespace "com.gaba.debloater"
     compileSdkVersion 33
 
     defaultConfig {
