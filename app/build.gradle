@@ -1,10 +1,8 @@
 plugins {
     id 'com.android.application'
-    id 'java'
 }
 
 android {
-    namespace "com.gaba.debloater"
     compileSdkVersion 33
 
     defaultConfig {
