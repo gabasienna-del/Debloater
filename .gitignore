@@ -1,6 +1,9 @@
-*.zip
 .gradle/
-.gradlew
-.local/
+gradle/
+*.zip
+*.jar
+!app/libs/api-82.jar
+/local.properties
 .idea/
-app/libs/*.jar
+build/
+*/build/
