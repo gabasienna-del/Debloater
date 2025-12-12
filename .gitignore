@@ -6,3 +6,4 @@ app/*.iml
 *.keystore
 *.jks
 *.apk
+gradle-8.7-bin.zip
