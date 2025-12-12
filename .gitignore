@@ -1,17 +1,6 @@
+*.zip
 .gradle/
-build/
-local.properties
-app/*.iml
-.idea/
-*.keystore
-*.jks
-*.apk
-gradle-8.7-bin.zip
-gradle-8.7-bin.zip
-# local gradle binary and extracted folder
-gradle-*.zip
-gradle/
-.gradle/
-*.iml
+.gradlew
+.local/
 .idea/
 app/libs/*.jar
