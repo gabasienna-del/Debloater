@@ -1,0 +1,36 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace "com.gaba.debloater"
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.gaba.debloater"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    packagingOptions {
+        jniLibs.useLegacyPackaging = true
+    }
+}
+
+dependencies {
+    // api-82.jar вручную положи в app/libs/
+    compileOnly files('libs/api-82.jar')
+}
