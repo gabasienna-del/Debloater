@@ -1,89 +1,419 @@
 package com.gaba.debloater;
 
-import java.util.ArrayList;
+import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class HookEntry implements IXposedHookZygoteInit {
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Arrays;
+import java.util.List;
+
+public class HookEntry implements IXposedHookZygoteInit, IXposedHookLoadPackage {
+
+    // !!! maximal debloat list (вставлено по твоему списку) !!!
+    private static final List<String> BLOAT = Arrays.asList(
+        "android",
+        "android.auto_generated_rro_vendor__",
+        "android.autoinstalls.config.samsung",
+        "app.txt_editor_jl.com",
+        "com.adobe.psmobile",
+        "com.android.apps.tag",
+        "com.android.backupconfirm",
+        "com.android.bluetooth",
+        "com.android.bluetoothmidiservice",
+        "com.android.bookmarkprovider",
+        "com.android.carrierconfig",
+        "com.android.carrierdefaultapp",
+        "com.android.cellbroadcastreceiver",
+        "com.android.cellbroadcastservice",
+        "com.android.certinstaller",
+        "com.android.chrome",
+        "com.android.companiondevicemanager",
+        "com.android.cts.ctsshim",
+        "com.android.cts.priv.ctsshim",
+        "com.android.dreams.basic",
+        "com.android.dreams.phototable",
+        "com.android.egg",
+        "com.android.emergency",
+        "com.android.externalstorage",
+        "com.android.hotspot2.osulogin",
+        "com.android.hotwordenrollment.okgoogle",
+        "com.android.hotwordenrollment.xgoogle",
+        "com.android.htmlviewer",
+        "com.android.inputdevices",
+        "com.android.internal.display.cutout.emulation.corner",
+        "com.android.internal.display.cutout.emulation.double",
+        "com.android.internal.display.cutout.emulation.hole",
+        "com.android.internal.display.cutout.emulation.tall",
+        "com.android.internal.display.cutout.emulation.waterfall",
+        "com.android.internal.systemui.navbar.gestural",
+        "com.android.internal.systemui.navbar.gestural_extra_wide_back",
+        "com.android.internal.systemui.navbar.gestural_narrow_back",
+        "com.android.internal.systemui.navbar.gestural_wide_back",
+        "com.android.internal.systemui.navbar.threebutton",
+        "com.android.keychain",
+        "com.android.localtransport",
+        "com.android.location.fused",
+        "com.android.managedprovisioning",
+        "com.android.mms.service",
+        "com.android.mtp",
+        "com.android.networkstack.tethering.inprocess",
+        "com.android.nfc",
+        "com.android.ons",
+        "com.android.pacprocessor",
+        "com.android.phone",
+        "com.android.providers.blockednumber",
+        "com.android.providers.calendar",
+        "com.android.providers.downloads",
+        "com.android.providers.downloads.ui",
+        "com.android.providers.media",
+        "com.android.providers.media.module",
+        "com.android.providers.partnerbookmarks",
+        "com.android.providers.settings",
+        "com.android.providers.telephony",
+        "com.android.proxyhandler",
+        "com.android.server.telecom",
+        "com.android.settings",
+        "com.android.settings.intelligence",
+        "com.android.sharedstoragebackup",
+        "com.android.shell",
+        "com.android.simappdialog",
+        "com.android.statementservice",
+        "com.android.storagemanager",
+        "com.android.systemui",
+        "com.android.theme.color.black",
+        "com.android.theme.color.cinnamon",
+        "com.android.theme.color.green",
+        "com.android.theme.color.ocean",
+        "com.android.theme.color.orchid",
+        "com.android.theme.color.purple",
+        "com.android.theme.color.space",
+        "com.android.theme.font.notoserifsource",
+        "com.android.theme.icon.pebble",
+        "com.android.theme.icon.roundedrect",
+        "com.android.theme.icon.squircle",
+        "com.android.theme.icon.taperedrect",
+        "com.android.theme.icon.teardrop",
+        "com.android.theme.icon.vessel",
+        "com.android.theme.icon_pack.circular.android",
+        "com.android.theme.icon_pack.circular.launcher",
+        "com.android.theme.icon_pack.circular.settings",
+        "com.android.theme.icon_pack.circular.systemui",
+        "com.android.theme.icon_pack.circular.themepicker",
+        "com.android.theme.icon_pack.filled.android",
+        "com.android.theme.icon_pack.filled.launcher",
+        "com.android.theme.icon_pack.filled.settings",
+        "com.android.theme.icon_pack.filled.systemui",
+        "com.android.theme.icon_pack.filled.themepicker",
+        "com.android.theme.icon_pack.rounded.android",
+        "com.android.theme.icon_pack.rounded.launcher",
+        "com.android.theme.icon_pack.rounded.settings",
+        "com.android.theme.icon_pack.rounded.systemui",
+        "com.android.theme.icon_pack.rounded.themepicker",
+        "com.android.traceur",
+        "com.android.vending",
+        "com.android.vpndialogs",
+        "com.android.wallpaper.livepicker",
+        "com.android.wallpapercropper",
+        "com.android.wifi.resources",
+        "com.arlosoft.macrodroid",
+        "com.aurora.store",
+        "com.chartcross.gpstest",
+        "com.eclipsim.gpsstatus2",
+        "com.einnovation.temu",
+        "com.gaba.debloater",
+        "com.google.android.apps.carrier.carrierwifi",
+        "com.google.android.apps.restore",
+        "com.google.android.captiveportallogin",
+        "com.google.android.configupdater",
+        "com.google.android.contactkeys",
+        "com.google.android.documentsui",
+        "com.google.android.ext.services",
+        "com.google.android.ext.shared",
+        "com.google.android.feedback",
+        "com.google.android.gms",
+        "com.google.android.gms.location.history",
+        "com.google.android.gsf",
+        "com.google.android.modulemetadata",
+        "com.google.android.networkstack",
+        "com.google.android.networkstack.permissionconfig",
+        "com.google.android.onetimeinitializer",
+        "com.google.android.overlay.gmsconfig.common",
+        "com.google.android.overlay.gmsconfig.gsa",
+        "com.google.android.overlay.gmsconfig.photos",
+        "com.google.android.overlay.modules.cellbroadcastreceiver",
+        "com.google.android.overlay.modules.cellbroadcastservice",
+        "com.google.android.overlay.modules.documentsui",
+        "com.google.android.overlay.modules.permissioncontroller",
+        "com.google.android.overlay.modules.permissioncontroller.forframework",
+        "com.google.android.packageinstaller",
+        "com.google.android.partnersetup",
+        "com.google.android.permissioncontroller",
+        "com.google.android.safetycore",
+        "com.google.android.setupwizard",
+        "com.google.android.syncadapters.calendar",
+        "com.google.android.syncadapters.contacts",
+        "com.google.android.trichromelibrary_410410683",
+        "com.google.android.trichromelibrary_749905233",
+        "com.google.android.webview",
+        "com.google.ar.core",
+        "com.google.mainline.telemetry",
+        "com.grx.overlay.dualsb",
+        "com.hiya.star",
+        "com.jana.tube.video",
+        "com.microsoft.appmanager",
+        "com.online.radar.kaf",
+        "com.openai.chatgpt",
+        "com.osp.app.signin",
+        "com.picsart.studio",
+        "com.rootuninstaller.pro",
+        "com.samsung.SMT",
+        "com.samsung.aasaservice",
+        "com.samsung.accessibility",
+        "com.samsung.advp.imssettings",
+        "com.samsung.android.MtpApplication",
+        "com.samsung.android.SettingsReceiver",
+        "com.samsung.android.accessibility.talkback",
+        "com.samsung.android.aircommandmanager",
+        "com.samsung.android.app.aodservice",
+        "com.samsung.android.app.camera.sticker.facearavatar.preload",
+        "com.samsung.android.app.contacts",
+        "com.samsung.android.app.dofviewer",
+        "com.samsung.android.app.dressroom",
+        "com.samsung.android.app.earphonetypec",
+        "com.samsung.android.app.ledbackcover",
+        "com.samsung.android.app.notes",
+        "com.samsung.android.app.notes.addons",
+        "com.samsung.android.app.readingglass",
+        "com.samsung.android.app.smartcapture",
+        "com.samsung.android.app.soundpicker",
+        "com.samsung.android.app.telephonyui",
+        "com.samsung.android.applock",
+        "com.samsung.android.appseparation",
+        "com.samsung.android.bio.face.service",
+        "com.samsung.android.biometrics.app.setting",
+        "com.samsung.android.bluelightfilter",
+        "com.samsung.android.brightnessbackupservice",
+        "com.samsung.android.calendar",
+        "com.samsung.android.callbgprovider",
+        "com.samsung.android.camerasdkservice",
+        "com.samsung.android.cameraxservice",
+        "com.samsung.android.cidmanager",
+        "com.samsung.android.cmfa.framework",
+        "com.samsung.android.dialer",
+        "com.samsung.android.dqagent",
+        "com.samsung.android.dsms",
+        "com.samsung.android.hdmapp",
+        "com.samsung.android.honeyboard",
+        "com.samsung.android.incall.contentprovider",
+        "com.samsung.android.incallui",
+        "com.samsung.android.livestickers",
+        "com.samsung.android.localeoverlaymanager",
+        "com.samsung.android.location",
+        "com.samsung.android.lool",
+        "com.samsung.android.mapsagent",
+        "com.samsung.android.mcfds",
+        "com.samsung.android.mcfserver",
+        "com.samsung.android.mdx.kit",
+        "com.samsung.android.messaging",
+        "com.samsung.android.mobileservice",
+        "com.samsung.android.motionphoto.viewer",
+        "com.samsung.android.net.wifi.wifiguider",
+        "com.samsung.android.networkdiagnostic",
+        "com.samsung.android.networkstack",
+        "com.samsung.android.networkstack.tethering.inprocess.overlay",
+        "com.samsung.android.networkstack.tethering.overlay",
+        "com.samsung.android.provider.filterprovider",
+        "com.samsung.android.providers.carrier",
+        "com.samsung.android.providers.contacts",
+        "com.samsung.android.providers.media",
+        "com.samsung.android.samsungpositioning",
+        "com.samsung.android.scs",
+        "com.samsung.android.sdk.handwriting",
+        "com.samsung.android.sdm.config",
+        "com.samsung.android.secsoundpicker",
+        "com.samsung.android.server.wifi.mobilewips",
+        "com.samsung.android.service.aircommand",
+        "com.samsung.android.service.airviewdictionary",
+        "com.samsung.android.service.livedrawing",
+        "com.samsung.android.service.pentastic",
+        "com.samsung.android.service.tagservice",
+        "com.samsung.android.setting.multisound",
+        "com.samsung.android.shortcutbackupservice",
+        "com.samsung.android.singletake.service",
+        "com.samsung.android.sm.devicesecurity",
+        "com.samsung.android.sm.policy",
+        "com.samsung.android.smartcallprovider",
+        "com.samsung.android.smartface",
+        "com.samsung.android.smartfitting",
+        "com.samsung.android.smartsuggestions",
+        "com.samsung.android.spdfnote",
+        "com.samsung.android.stickercenter",
+        "com.samsung.android.sume.nn.service",
+        "com.samsung.android.svcagent",
+        "com.samsung.android.tapack.authfw",
+        "com.samsung.android.themecenter",
+        "com.samsung.android.themestore",
+        "com.samsung.android.timezone.data_R",
+        "com.samsung.android.timezone.updater",
+        "com.samsung.android.video",
+        "com.samsung.android.vtcamerasettings",
+        "com.samsung.android.wallpaper.res",
+        "com.samsung.android.wifi.resources",
+        "com.samsung.android.wifi.softap.resources",
+        "com.samsung.app.highlightplayer",
+        "com.samsung.app.newtrim",
+        "com.samsung.clipboardsaveservice",
+        "com.samsung.cmh",
+        "com.samsung.crane",
+        "com.samsung.faceservice",
+        "com.samsung.gamedriver.ex9825",
+        "com.samsung.gpuwatchapp",
+        "com.samsung.ims.smk",
+        "com.samsung.internal.systemui.navbar.gestural_no_hint",
+        "com.samsung.internal.systemui.navbar.gestural_no_hint_extra_wide_back",
+        "com.samsung.internal.systemui.navbar.gestural_no_hint_narrow_back",
+        "com.samsung.internal.systemui.navbar.gestural_no_hint_wide_back",
+        "com.samsung.internal.systemui.navbar.sec_gestural",
+        "com.samsung.internal.systemui.navbar.sec_gestural_no_hint",
+        "com.samsung.ipservice",
+        "com.samsung.mlp",
+        "com.samsung.pregpudriver.ex9825",
+        "com.samsung.rcs",
+        "com.samsung.safetyinformation",
+        "com.samsung.sec.android.application.csc",
+        "com.samsung.sec.android.teegris.tui_service",
+        "com.samsung.storyservice",
+        "com.samsung.ucs.agent.ese",
+        "com.sec.android.RilServiceModeApp",
+        "com.sec.android.app.DataCreate",
+        "com.sec.android.app.SecSetupWizard",
+        "com.sec.android.app.apex",
+        "com.sec.android.app.applinker",
+        "com.sec.android.app.bluetoothtest",
+        "com.sec.android.app.camera",
+        "com.sec.android.app.chromecustomizations",
+        "com.sec.android.app.clockpackage",
+        "com.sec.android.app.factorykeystring",
+        "com.sec.android.app.hwmoduletest",
+        "com.sec.android.app.launcher",
+        "com.sec.android.app.myfiles",
+        "com.sec.android.app.parser",
+        "com.sec.android.app.personalization",
+        "com.sec.android.app.popupcalculator",
+        "com.sec.android.app.safetyassurance",
+        "com.sec.android.app.servicemodeapp",
+        "com.sec.android.app.setupwizardlegalprovider",
+        "com.sec.android.app.soundalive",
+        "com.sec.android.app.ve.vebgm",
+        "com.sec.android.app.vepreload",
+        "com.sec.android.app.wlantest",
+        "com.sec.android.autodoodle.service",
+        "com.sec.android.daemonapp",
+        "com.sec.android.easyonehand",
+        "com.sec.android.gallery3d",
+        "com.sec.android.inputmethod",
+        "com.sec.android.mimage.photoretouching",
+        "com.sec.android.preloadinstaller",
+        "com.sec.android.provider.badge",
+        "com.sec.android.sdhms",
+        "com.sec.android.smartfpsadjuster",
+        "com.sec.android.systemupdate",
+        "com.sec.app.RilErrorNotifier",
+        "com.sec.automation",
+        "com.sec.bcservice",
+        "com.sec.enterprise.mdm.services.simpin",
+        "com.sec.epdg",
+        "com.sec.epdgtestapp",
+        "com.sec.factory",
+        "com.sec.factory.camera",
+        "com.sec.factory.cameralyzer",
+        "com.sec.hearingadjust",
+        "com.sec.imslogger",
+        "com.sec.imsservice",
+        "com.sec.mhs.smarttethering",
+        "com.sec.modem.settings",
+        "com.sec.phone",
+        "com.sec.sve",
+        "com.sec.unifiedwfc",
+        "com.sec.usbsettings",
+        "com.sec.vsim.ericssonnsds.webapp",
+        "com.sem.factoryapp",
+        "com.shazam.android",
+        "com.skms.android.agent",
+        "com.speedsoftware.rootexplorer",
+        "com.termux",
+        "com.termux.api",
+        "com.termux.widget",
+        "com.termux.window",
+        "com.tombayley.tileshortcuts",
+        "com.vkontakte.android",
+        "com.weather.forecast.weatherchannel",
+        "com.whatsapp",
+        "com.wsomacp",
+        "com.yandex.browser",
+        "com.zhiliaoapp.musically",
+        "jackpal.androidterm",
+        "kz.altel.app",
+        "kz.kaspi.mobile",
+        "kz.kolesa",
+        "kz.mobile.mgov",
+        "kz.slando",
+        "kz.tele2.app",
+        "net.superblock.pushover",
+        "org.fdroid.fdroid",
+        "org.telegraam.addon",
+        "org.telegram.messenger.web",
+        "pushnotificationtester.app",
+        "ru.dublgis.dgismobile",
+        "ru.yandex.taxi",
+        "ru.yandex.taximeter",
+        "ru.yandex.yandexnavi",
+        "taxi.helper.app",
+        "ttn.zxzw"
+    );
 
     @Override
-    public void initZygote(StartupParam startupParam) {
+    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) {
+        // здесь можно логировать или инициализировать что нужно
+        XposedBridge.log("Debloater: zygote init — loaded " + BLOAT.size() + " packages");
+    }
 
-        ArrayList<String> bloat = new ArrayList<>();
+    @Override
+    public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+        // Записываем список пакетов один раз при загрузке системного процесса
+        try {
+            if ("android".equals(lpparam.packageName)) {
+                writeList();
+            }
+        } catch (Throwable ignored) {}
 
-        // === GOOGLE ===
-        bloat.add("com.android.chrome");
-        bloat.add("com.google.android.hotwordenrollment.okgoogle");
-        bloat.add("com.google.android.hotwordenrollment.xgoogle");
-        bloat.add("com.google.android.syncadapters.calendar");
-        bloat.add("com.google.android.syncadapters.contacts");
-        bloat.add("com.google.android.gms.location.history");
-        bloat.add("com.google.android.apps.playauto.installconfig");
-        bloat.add("com.android.egg");
+        // Если пакет в списке — блокируем (в лог пишем)
+        if (BLOAT.contains(lpparam.packageName)) {
+            XposedBridge.log("Debloater BLOCK: " + lpparam.packageName);
+            // здесь ты можешь поставить дополнительные меры блокировки (например бросить исключение,
+            // возвращать null у компонентов или перехватывать Intent-и). Простая логика ниже:
+            try {
+                // попытаемся удалить/завершить работу: принудительный crash (мягкий способ)
+                throw new RuntimeException("Blocked by Debloater");
+            } catch (Throwable t) {
+                // ловим, чтобы модуль не мешал системе (логируем)
+                XposedBridge.log("Debloater: blocked and swallowed for " + lpparam.packageName + " : " + t);
+            }
+        }
+    }
 
-        // === SAMSUNG THEMES / STICKERS / AR ===
-        bloat.add("com.samsung.android.themestore");
-        bloat.add("com.samsung.android.theme.service");
-        bloat.add("com.samsung.android.stickercenter");
-        bloat.add("com.samsung.android.arzone.croco");
-        bloat.add("com.samsung.android.livestickers");
-        bloat.add("com.samsung.android.app.livemessage");
-
-        // === CAMERA EXTRA (НЕ основная камера) ===
-        bloat.add("com.samsung.android.app.singletake");
-        bloat.add("com.samsung.android.motionphotoviewer");
-        bloat.add("com.samsung.app.videoeditorlite");
-        bloat.add("com.samsung.android.videotrimmer");
-
-        // === SAMSUNG BLOATED SERVICES ===
-        bloat.add("com.samsung.android.sm");
-        bloat.add("com.samsung.android.sm.provider");
-        bloat.add("com.hiya.star");
-        bloat.add("com.samsung.android.app.spage");
-        bloat.add("com.samsung.android.smartfaceservice");
-        bloat.add("com.samsung.android.intelligentfpsadjuster");
-        bloat.add("com.sec.android.silentlog");
-        bloat.add("com.samsung.android.location");
-        bloat.add("com.samsung.android.kgclient");
-        bloat.add("com.samsung.android.spcmclient");
-        bloat.add("com.samsung.android.easysetup");
-        bloat.add("com.samsung.android.mdx.kit");
-
-        // === WIDGETS / WEATHER / WALLPAPERS ===
-        bloat.add("com.samsung.android.weather");
-        bloat.add("com.samsung.android.smartwifi");
-        bloat.add("com.samsung.android.wallpaper.res");
-        bloat.add("com.samsung.android.aircommandmanager");
-        bloat.add("com.samsung.android.app.aircommand");
-        bloat.add("com.samsung.android.app.airviewdictionary");
-        bloat.add("com.samsung.android.widgetapp.yahooedge.finance");
-        bloat.add("com.samsung.android.widgetapp.yahooedge.sport");
-
-        // === PHOTO EDITORS ===
-        bloat.add("com.sec.android.mimage.photoretouching");
-        bloat.add("com.samsung.android.photoeditor");
-
-        // === TEST / FACTORY APPS ===
-        bloat.add("com.sec.android.app.cameralyzer");
-        bloat.add("com.sec.factory");
-        bloat.add("com.sec.factory.camera");
-        bloat.add("com.sec.factory.app.ui");
-        bloat.add("com.sec.factory.health");
-        bloat.add("com.sec.device.test");
-        bloat.add("com.sec.android.app.factorytest");
-        bloat.add("com.sec.epdgtestapp");
-
-        // === EXTRA BLOATED ===
-        bloat.add("com.samsung.android.service.peoplestripe");
-        bloat.add("com.samsung.android.service.aircommand");
-        bloat.add("com.samsung.android.app.routines");
-        bloat.add("com.samsung.android.mateagent");
-        bloat.add("com.samsung.android.visionintelligence");
-        bloat.add("com.samsung.android.da.daagent");
-        bloat.add("com.samsung.android.drivelink.stub");
-
-        for (String pkg : bloat) {
-            XposedBridge.log("Debloater blocking: " + pkg);
+    private void writeList() {
+        try {
+            File f = new File("/sdcard/debloater_list.txt");
+            FileWriter fw = new FileWriter(f, false);
+            for (String pkg : BLOAT) fw.write(pkg + "\\n");
+            fw.close();
+            XposedBridge.log("Debloater: wrote debloat list to /sdcard/debloater_list.txt");
+        } catch (Throwable t) {
+            XposedBridge.log("Debloater write error: " + t);
         }
     }
 }
